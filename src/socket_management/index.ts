@@ -65,6 +65,12 @@ export default function(socketGroups: Group<Socket>){
     }
 
 
+    /**
+     * метод для обработки actions от клиентов с измененными полями в travel
+     *
+     * Полученный action отправляется всем подписанным на данное путешествие пользователям
+     * @param msgStr
+     */
     function newTravelAction(this: Socket, msgStr: string){
         const msg: Record<string, any> = parseMessage(msgStr)
         log('newTravelAction', msg)
@@ -84,6 +90,10 @@ export default function(socketGroups: Group<Socket>){
     }
 
 
+    /**
+     * метод для обработки сообщений из чата
+     * @param msgStr
+     */
     function newTravelMessage(this: Socket, msgStr: string){
         const msg: Record<string, any> = parseMessage(msgStr)
         log('newTravelMessage', msg)
@@ -103,6 +113,10 @@ export default function(socketGroups: Group<Socket>){
     }
 
 
+    /**
+     * обработка и отправка сообщений об изменениях в expense
+     * @param msg
+     */
     function newExpenseAction(this: Socket, msg: Record<string, any>){
         const validation = expenseActionSchema.validate(msg)
         if(validation.error){
@@ -121,6 +135,10 @@ export default function(socketGroups: Group<Socket>){
     }
 
 
+    /**
+     * обработка и отправка сообщений об изменениях в limit
+     * @param msg
+     */
     function newLimitAction(this: Socket, msg: Record<string, any>){
         const validation = limitActionSchema.validate(msg)
         if(validation.error){
@@ -139,6 +157,9 @@ export default function(socketGroups: Group<Socket>){
     }
 
 
+    /**
+     * обработка разрыва соединения с клиентом
+     */
     function disconnect(this: Socket){
         log('disconnect', {})
         socketGroups.deleteFromAllGroups(this)
