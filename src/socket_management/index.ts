@@ -42,6 +42,8 @@ export default function(socketGroups: Group<Socket>){
             this.emit('travel:join:result', {ok: false, message: validation.error})
             return
         }
+
+        msg.travelID.forEach((id: string) => socketGroups.add(id, this))
         socketGroups.add(msg.travelID, this)
         this.emit('travel:join:result', {ok: true, payload: msg})
     }

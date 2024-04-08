@@ -9,7 +9,7 @@ import Joi from "joi";
  * валидация сообщения подключения к группе по travelID
  */
 export const joinSchema = Joi.object({
-    travelID: Joi.string().required()
+    travelID: Joi.array().required()
 })
 
 
