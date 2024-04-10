@@ -1,15 +1,18 @@
-import "dotenv/config";
-
 import {createServer} from 'https'
 import * as fs from "fs";
+import "dotenv/config";
+
 
 import socketManagement from './socket_management'
 import {Server, Socket} from "socket.io";
 import {Group} from "./class";
+import {rmqHandlers} from "./rmq/rmqHandlers";
 
 
 const hostname = process.env.HOST_NAME as string;
 const port = process.env.PORT as string;
+
+console.log({hostname, port})
 
 
 const httpServer = createServer(
@@ -40,6 +43,10 @@ io.on("connection", (socket) => {
     socket.on('limit:action', handle.newLimitAction)
     socket.on('disconnect', handle.disconnect)
 });
+
+const rmq = rmqHandlers(userGroups)
+
+rmq.handleRMQMessage()
 
 httpServer.listen(Number(port))
 
