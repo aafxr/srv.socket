@@ -1,5 +1,5 @@
-import { Socket } from "socket.io";
-import { Group } from "../class";
+import {Socket} from "socket.io";
+import {Group} from "../class";
 import {
     expenseActionSchema,
     joinSchema,
@@ -13,18 +13,18 @@ export enum Errors {
     INVALID_PALOAD = "invalid payload",
 }
 
-export default function(socketGroups: Group<Socket>){
+export default function (socketGroups: Group<Socket>) {
 
-    function parseMessage(msg: string){
+    function parseMessage(msg: string) {
         return msg
-        try{
+        try {
             return JSON.parse(msg)
-        }catch (_){
+        } catch (_) {
             return
         }
     }
 
-    function log(handler: string, msg: any){
+    function log(handler: string, msg: any) {
         console.log(handler + ' -> ' + JSON.stringify(msg), typeof msg)
     }
 
@@ -32,13 +32,13 @@ export default function(socketGroups: Group<Socket>){
      * this Socket instance
      * @param msgStr expect {travelID: string}
      */
-    function joinToTravel(this: Socket, msgStr: string){
+    function joinToTravel(this: Socket, msgStr: string) {
         log('joinToTravel', msgStr)
 
         const msg: Record<string, any> = parseMessage(msgStr)
         log('joinToTravel', msg)
         const validation = joinSchema.validate(msg)
-        if(validation.error) {
+        if (validation.error) {
             this.emit('travel:join:result', {ok: false, message: validation.error})
             return
         }
@@ -52,13 +52,13 @@ export default function(socketGroups: Group<Socket>){
     /**
      * this Socket instance
      * @param msgStr expect {travelID: string}
-     * @returns 
+     * @returns
      */
-    function leaveFromTravel(this: Socket, msgStr: string){
+    function leaveFromTravel(this: Socket, msgStr: string) {
         const msg: Record<string, any> = parseMessage(msgStr)
         log('leaveFromTravel', msg)
         const validation = leaveSchema.validate(msg)
-        if(validation.error) {
+        if (validation.error) {
             this.emit('travel:leave:result', {ok: false, message: validation.error})
             return
         }
@@ -73,20 +73,19 @@ export default function(socketGroups: Group<Socket>){
      * Полученный action отправляется всем подписанным на данное путешествие пользователям
      * @param msgStr
      */
-    function newTravelAction(this: Socket, msgStr: string){
+    function newTravelAction(this: Socket, msgStr: string) {
         const msg: Record<string, any> = parseMessage(msgStr)
         log('newTravelAction', msg)
         const validation = travelActionSchema.validate(msg)
-        if(validation.error){
+        if (validation.error) {
             this.emit('travel:action:result', {ok: false, message: validation.error})
             return
         }
-        const group = socketGroups.getItems(msg.data.id)
-        if(group){
-            for(const g of group){
-                if(g === this) continue
-                g.emit('travel:action', msg)
-            }
+        const group = socketGroups.getItems(msg.data.id) || []
+        const subsToAll = socketGroups.getItems('all') || []
+        for (const g of [...group, ...subsToAll]) {
+            if (g === this) continue
+            g.emit('travel:action', msg)
         }
         this.emit('travel:action:result', {ok: true, payload: msg})
     }
@@ -96,18 +95,18 @@ export default function(socketGroups: Group<Socket>){
      * метод для обработки сообщений из чата
      * @param msgStr
      */
-    function newTravelMessage(this: Socket, msgStr: string){
+    function newTravelMessage(this: Socket, msgStr: string) {
         const msg: Record<string, any> = parseMessage(msgStr)
         log('newTravelMessage', msg)
         const validation = messageSchema.validate(msg)
-        if(validation.error){
+        if (validation.error) {
             this.emit('travel:message:result', {ok: false, message: validation.error})
             return
         }
         const group = socketGroups.getItems(msg.primary_entity_id)
-        if(group){
-            for(const g of group){
-                if(g === this) continue
+        if (group) {
+            for (const g of group) {
+                if (g === this) continue
                 g.emit('travel:message', msg)
             }
         }
@@ -119,17 +118,17 @@ export default function(socketGroups: Group<Socket>){
      * обработка и отправка сообщений об изменениях в expense
      * @param msg
      */
-    function newExpenseAction(this: Socket, msg: Record<string, any>){
+    function newExpenseAction(this: Socket, msg: Record<string, any>) {
         const validation = expenseActionSchema.validate(msg)
-        if(validation.error){
+        if (validation.error) {
             this.emit('expense:action:result', {ok: false, message: validation.error})
             return
         }
 
-        const group = socketGroups.getItems( msg.data.primary_entity_id )
-        if(group){
-            for (const g of group){
-                if(g === this) continue
+        const group = socketGroups.getItems(msg.data.primary_entity_id)
+        if (group) {
+            for (const g of group) {
+                if (g === this) continue
                 g.emit('expense:action', msg)
             }
         }
@@ -141,17 +140,17 @@ export default function(socketGroups: Group<Socket>){
      * обработка и отправка сообщений об изменениях в limit
      * @param msg
      */
-    function newLimitAction(this: Socket, msg: Record<string, any>){
+    function newLimitAction(this: Socket, msg: Record<string, any>) {
         const validation = limitActionSchema.validate(msg)
-        if(validation.error){
+        if (validation.error) {
             this.emit('limit:action:result', {ok: false, message: validation.error})
             return
         }
 
-        const group = socketGroups.getItems( msg.data.primary_entity_id )
-        if(group){
-            for (const g of group){
-                if(g === this) continue
+        const group = socketGroups.getItems(msg.data.primary_entity_id)
+        if (group) {
+            for (const g of group) {
+                if (g === this) continue
                 g.emit('limit:action', msg)
             }
         }
@@ -162,7 +161,7 @@ export default function(socketGroups: Group<Socket>){
     /**
      * обработка разрыва соединения с клиентом
      */
-    function disconnect(this: Socket){
+    function disconnect(this: Socket) {
         log('disconnect', {})
         socketGroups.deleteFromAllGroups(this)
     }

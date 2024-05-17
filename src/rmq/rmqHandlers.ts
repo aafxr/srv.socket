@@ -13,7 +13,7 @@ export function rmqHandlers(socketGroups: Group<Socket>){
 
                 const exchange = 'action';
 
-                channel.assertExchange(exchange, 'fanout', { durable: false});
+                channel.assertExchange(exchange, 'fanout', { durable: true});
 
                 channel.assertQueue('', {
                     exclusive: true
@@ -25,14 +25,17 @@ export function rmqHandlers(socketGroups: Group<Socket>){
                     channel.consume(q.queue, function(msg: Message | null) {
                         if(msg && msg.content) {
                             try{
-                                const action = JSON.parse(msg.content.toString("utf-8"))
+                                const msgText = msg.content.toString("utf-8")
+                                console.log('[rmq msg] ===> ', msgText)
+                                const action = JSON.parse(msgText)
                                 let primary_entity_id: string | undefined = undefined
                                 if(action?.data?.primary_entity_id) primary_entity_id = action?.data?.primary_entity_id
                                 if(action.entity === 'Travel') primary_entity_id = action.data.id
 
                                 if(primary_entity_id){
-                                    const subs = socketGroups.getItems(primary_entity_id)
-                                    if(subs) subs.forEach(s => s.emit('action', action))
+                                    const subs = socketGroups.getItems(primary_entity_id) || []
+                                    const subsToAll = socketGroups.getItems('all') || [];
+                                    [...subs, ...subsToAll].forEach(s => s.emit('action', action))
                                 }
                             }catch (e){
                                 console.error(e)
